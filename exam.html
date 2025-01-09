@@ -32,6 +32,32 @@
             color: #555;
         }
 
+        form {
+            direction: rtl;
+            text-align: right;
+        }
+
+        form label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        form input {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        form input:focus {
+            border-color: #007BFF;
+            outline: none;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+        }
+
         .btn {
             display: inline-block;
             padding: 10px 20px;
