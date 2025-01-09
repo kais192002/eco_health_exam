@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>امتحان مقياس برمجية بايتون</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .header h1 {
+            margin: 0;
+            color: #555;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            color: #fff;
+            background: #007BFF;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .btn:hover {
+            background: #0056b3;
+        }
+
+        .question {
+            margin-bottom: 20px;
+            direction: rtl;
+            text-align: right;
+        }
+
+        .options {
+            direction: ltr;
+            text-align: left;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus {
+            border-color: #007BFF;
+            outline: none;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+        }
+
+        .form-container {
+            background: #fafafa;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-title {
+            font-size: 1.5rem;
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .timer {
+            text-align: right;
+            font-weight: bold;
+            font-size: 1.2em;
+            color: #ff5722;
+        }
+
+        .progress-bar {
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-bar div {
+            height: 100%;
+            width: 0;
+            background: #007BFF;
+            transition: width 0.5s ease;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .navigation-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+    </style>
+    <script>
+        let currentQuestion = 0;
+        let score = 0;
+        let answers = [];
+        let timer;
+        let totalQuestions = 0;
+        let totalTime;
+
+        window.onload = function () {
+            totalQuestions = document.querySelectorAll('.question').length;
+            totalTime = totalQuestions * 120;
+        };
+
+        function startExam() {
+            document.getElementById('start-page').classList.add('hidden');
+            document.getElementById('question-page').classList.remove('hidden');
+            showQuestion();
+            startTimer();
+        }
+
+        function validateForm() {
+            const inputs = document.querySelectorAll('#start-page input');
+            for (let input of inputs) {
+                if (!input.value.trim()) {
+                    alert('يرجى ملء جميع الحقول');
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function showQuestion() {
+            const questions = document.querySelectorAll('.question');
+            questions.forEach((q, index) => {
+                q.classList.add('hidden');
+                if (index === currentQuestion) q.classList.remove('hidden');
+            });
+            updateProgressBar();
+        }
+
+        function startTimer() {
+            document.getElementById('timer').innerText = `الوقت المتبقي: ${formatTime(totalTime)}`;
+            timer = setInterval(() => {
+                totalTime--;
+                document.getElementById('timer').innerText = `الوقت المتبقي: ${formatTime(totalTime)}`;
+                if (totalTime <= 0) endExam();
+            }, 1000);
+        }
+
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${minutes} دقيقة و ${secs} ثانية`;
+        }
+
+        function updateProgressBar() {
+            const progress = (currentQuestion / totalQuestions) * 100;
+            document.getElementById('progress').style.width = `${progress}%`;
+        }
+
+        function nextQuestion() {
+            saveAnswer();
+            if (currentQuestion < totalQuestions - 1) {
+                currentQuestion++;
+                showQuestion();
+            } else {
+                endExam();
+            }
+        }
+
+        function previousQuestion() {
+            if (currentQuestion > 0) {
+                saveAnswer();
+                currentQuestion--;
+                showQuestion();
+            }
+        }
+
+        function saveAnswer() {
+            const selectedAnswer = document.querySelector(
+                `.question:not(.hidden) input[name="answer"]:checked`
+            );
+            if (selectedAnswer && !answers[currentQuestion]) {
+                answers[currentQuestion] = {
+                    value: selectedAnswer.value,
+                    correct: selectedAnswer.dataset.correct === 'true'
+                };
+                if (answers[currentQuestion].correct) {
+                    score++;
+                }
+            }
+        }
+
+        function endExam() {
+            clearInterval(timer);
+            saveAnswer(); // Save the answer for the last question
+            document.getElementById('question-page').classList.add('hidden');
+            document.getElementById('result-page').classList.remove('hidden');
+            document.getElementById('score').innerText = `نتيجتك: ${score}/${totalQuestions}`;
+            saveAnswers();
+        }
+
+function saveAnswersToGoogleSheet() {
+    const formData = new FormData();
+    formData.append('name', document.getElementById('name').value);
+    formData.append('surname', document.getElementById('surname').value);
+    formData.append('regNumber', document.getElementById('regNumber').value);
+    formData.append('email', document.getElementById('email').value);
+    formData.append('score', score);
+    formData.append('answers', JSON.stringify(answers));
+
+    fetch('https://script.google.com/macros/s/AKfycbzZSA5h-4dy6TYlaXIVqPV5dabW3b_Y-MG-ADXvN2_xGB0sR_2RjILvRX6gbmBO-0TBog/exec', {
+        method: 'POST',
+        body: formData,
+    })
+    .then(response => response.json())
+        .then(data => {
+            if (data.status === "success") {
+                alert('تم حفظ الإجابات بنجاح');
+            } else {
+                alert('حدث خطأ أثناء حفظ الإجابات: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('تعذر الاتصال بالخادم');
+        });
+}
+    </script>
+</head>
+<body>
+    <div class="container" id="start-page">
+        <div class="header">
+            <h1>امتحان مقياس برمجية بايثون</h1>
+        </div>
+        <div class="form-container">
+            <form onsubmit="return validateForm()">
+                <div class="form-title">يرجى إدخال معلوماتك للبدء</div>
+                <div class="form-group">
+                    <label for="name">الاسم:</label>
+                    <input type="text" id="name" placeholder="أدخل اسمك" required>
+                </div>
+                <div class="form-group">
+                    <label for="surname">اللقب:</label>
+                    <input type="text" id="surname" placeholder="أدخل لقبك" required>
+                </div>
+                <div class="form-group">
+                    <label for="regNumber">رقم التسجيل:</label>
+                    <input type="text" id="regNumber" placeholder="أدخل رقم التسجيل" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">البريد الإلكتروني:</label>
+                    <input type="email" id="email" placeholder="أدخل بريدك الإلكتروني" required>
+                </div>
+                <a href="#" class="btn" onclick="if(validateForm()) startExam()">ابدأ الامتحان</a>
+            </form>
+        </div>
+    </div>
+
+    <div class="container hidden" id="question-page">
+        <div class="timer" id="timer">الوقت المتبقي: 60 ثانية</div>
+        <div class="progress-bar"><div id="progress"></div></div>
+
+        <!-- Example Question -->
+        <div class="question">
+            <h3>السؤال الأول: ما هو الغرض الأساسي من وجود مجلد lib في مشروع بايثون؟</h3>
+            <div class="options">
+                <input type="radio" name="answer" value="a"> يحتوي على الملفات التنفيذية للبرنامج<br>
+                <input type="radio" name="answer" value="b" data-correct="true"> يحتوي على المكتبات الخارجية التي يستخدمها البرنامج.<br>
+                <input type="radio" name="answer" value="c"> يحتوي على ملفات التكوين الخاصة بالبيئة التطويرية.<br>
+                <input type="radio" name="answer" value="d"> يحتوي على أمثلة للكود البرمجي.<br>
+            </div>
+            <div class="navigation-buttons">
+                <button type="button" class="btn" onclick="nextQuestion()">السؤال التالي</button>
+                <button type="button" class="btn" onclick="previousQuestion()">السؤال السابق</button>
+            </div>
+        </div>
+
+        <div class="question">
+            <h3>- السؤال الثاني: ما الذي يفعله سطر الأوامر التالي في لغة بايثون؟  from calc_area import rectangle</h3>
+            <div class="options">
+                <input type="radio" name="answer" value="a"> يُعرف دالة جديدة باسم لحساب مساحة المستطيل<br>
+                <input type="radio" name="answer" value="b"> 	يستدعي دالة موجودة لحساب مساحة المستطيل.<br>
+                <input type="radio" name="answer" value="c"data-correct="true"> يستورد دالة من وحدة ليتم ستخدامها في هذا البرنامج<br>
+                <input type="radio" name="answer" value="d"> يخلق ملفًا جديدًا ويضيف إليه دالة<br>
+            </div>
+            <div class="navigation-buttons">
+                <button type="button" class="btn" onclick="nextQuestion()">السؤال التالي</button>
+                <button type="button" class="btn" onclick="previousQuestion()">السؤال السابق</button>
+            </div>
+        </div>
+
+        <div class="question">
+            <h3>- السؤال الثالث: ما هو الغرض الرئيسي من ملف __init__.py في بايثون؟ </h3>
+            <div class="options">
+                <input type="radio" name="answer" value="a"> يحتوي على الدالة الرئيسية لتنفيذ البرنامج<br>
+                <input type="radio" name="answer" value="b"> يُستخدم لتعريف الدوال والمتغيرات العالمية التي يمكن استخدامها في جميع أنحاء البرنامج<br>
+                <input type="radio" name="answer" value="c"data-correct="true"> يشير إلى أن المجلد الذي يوجد فيه هو عبارة عن حزمة <br>
+                <input type="radio" name="answer" value="d"> يُستخدم لتخزين البيانات المؤقتة أثناء تنفيذ البرنامج<br>
+            </div>
+            <div class="navigation-buttons">
+                <button type="button" class="btn" onclick="nextQuestion()">السؤال التالي</button>
+                <button type="button" class="btn" onclick="previousQuestion()">السؤال السابق</button>
+            </div>
+        </div>
+
+        <div class="question">
+            <h3>- السؤال الرابع: أي من الأوامر التالية في واجهة سطر الأوامر يستخدم للانتقال من المجلد الحالي إلى المجلد الرئيسي؟</h3>
+            <div class="options">
+                <input type="radio" name="answer" value="a">MD.<br>
+                <input type="radio" name="answer" value="b">RD.<br>
+                <input type="radio" name="answer" value="c"data-correct="true">CD<br>
+                <input type="radio" name="answer" value="d"> cls<br>
+            </div>
+            <div class="navigation-buttons">
+                <button type="button" class="btn" onclick="nextQuestion()">السؤال التالي</button>
+                <button type="button" class="btn" onclick="previousQuestion()">السؤال السابق</button>
+            </div>
+        </div>
+
+        <div class="question">
+            <h3>-  السؤال الخامس: ما هو الدور الأساسي لنظام ادارة الحزم في برنامج بايثون؟</h3>
+            <div class="options">
+                <input type="radio" name="answer" value="a"data-correct="true"> تثبيت وتحديث وإزالة حزم بايثون فقط.<br>
+                <input type="radio" name="answer" value="b"> إنشاء وتحرير ملفات بايثون الأساسية.<br>
+                <input type="radio" name="answer" value="c">إدارة جميع عمليات التثبيت والبرامج على جهاز الكمبيوتر<br>
+                <input type="radio" name="answer" value="d"> توفير واجهة رسومية لكتابة وتشغيل برامج بايثون.<br>
+            </div>
+            <div class="navigation-buttons">
+                <button type="button" class="btn" onclick="nextQuestion()">السؤال التالي</button>
+                <button type="button" class="btn" onclick="previousQuestion()">السؤال السابق</button>
+            </div>
+        </div>
+        <div class="question">
+            <h3>- السؤال السادس: ما هو الهدف الرئيسي من استخدام بيئة افتراضية في بايثون؟</h3>
+            <div class="options">
+                <input type="radio" name="answer" value="a"> تسهيل عملية تثبيت وتحديث الحزم والبرامج.<br>
+                <input type="radio" name="answer" value="b"data-correct="true"> عزل بيئات عمل مختلفة لمشاريع متعددة وتجنب التعارضات بين الحزم.<br>
+                <input type="radio" name="answer" value="c">زيادة سرعة تنفيذ البرامج<br>
+                <input type="radio" name="answer" value="d">حماية خصوصية البيانات المستخدمة في المشاريع.<br>
+            </div>
+            <div class="navigation-buttons">
+                <button type="button" class="btn" onclick="nextQuestion()">السؤال التالي</button>
+                <button type="button" class="btn" onclick="previousQuestion()">السؤال السابق</button>
+            </div>
+        </div>
+
+        <div class="question">
+            <h3>-  السؤال السابع: أي من القواعد التالية غير صحيحة فيما يتعلق بتسمية المتغيرات في لغة بايثون؟</h3>
+            <div class="options">
+                <input type="radio" name="answer" value="a"> يجب أن يبدأ اسم المتغير بحرف أو بشرطة سفلية (_).<br>
+                <input type="radio" name="answer" value="b">يمكن أن يحتوي اسم المتغير على أرقام وحروف وأشرطة سفلية.<br>
+                <input type="radio" name="answer" value="c">يجب أن تكون أسماء المتغيرات حساسة لحالة الأحرف <br>
+                <input type="radio" name="answer" value="d"data-correct="true">يمكن استخدام الكلمات المفتاحية في بايثون كأسماء للمتغيرات.<br>
+            </div>
+            <div class="navigation-buttons">
+                <button type="button" class="btn" onclick="nextQuestion()">السؤال التالي</button>
+                <button type="button" class="btn" onclick="previousQuestion()">السؤال السابق</button>
+            </div>
+        </div>
+
+        <div class="question">
+            <h3>-  السؤال الثامن:أي من الخيارات التالية يصف بشكل أفضل وظيفة الجملة الشرطية if  في بايثون؟</h3>
+            <div class="options">
+                <input type="radio" name="answer" value="a"> تستخدم لتنفيذ مجموعة من الأوامر بشكل متكرر<br>
+                <input type="radio" name="answer" value="b"data-correct="true">تستخدم لاتخاذ قرارات بناءً على شرط معين.<br>
+                <input type="radio" name="answer" value="c">تستخدم لتعريف دوال جديدة. <br>
+                <input type="radio" name="answer" value="d">تستخدم لإنشاء قوائم.<br>
+            </div>
+            <div class="navigation-buttons">
+                <button type="button" class="btn" onclick="nextQuestion()">السؤال التالي</button>
+                <button type="button" class="btn" onclick="previousQuestion()">السؤال السابق</button>
+            </div>
+        </div>
+
+        <div class="question">
+            <h3>-  السؤال التاسع: أي من العبارات التالية تصف بشكل صحيح الهياكل التكرارية في بايثون (loops)؟</h3>
+            <div class="options">
+                <input type="radio" name="answer" value="a"> تستخدم لتنفيذ مجموعة من الأوامر مرة واحدة فقط<br>
+                <input type="radio" name="answer" value="b"data-correct="true">تستخدم لتنفيذ مجموعة من الأوامر بشكل متكرر حتى يتحقق شرط معين<br>
+                <input type="radio" name="answer" value="c">تستخدم لتعريف دوال . <br>
+                <input type="radio" name="answer" value="d">تستخدم لتخزين مجموعة من القيم<br>
+            </div>
+            <div class="navigation-buttons">
+                <button type="button" class="btn" onclick="nextQuestion()">السؤال التالي</button>
+                <button type="button" class="btn" onclick="previousQuestion()">السؤال السابق</button>
+            </div>
+        </div>
+
+        <div class="question">
+            <h3>-  السؤال العاشر: أي من الشروط التالية صحيح لتنفيذ كتلة الشفرة داخل كتلة  else ؟ (loops)؟</h3>
+            <div class="options">
+                <input type="radio" name="answer" value="a"> تستخدم لتنفيذ مجموعة من الأوامر مرة واحدة فقط<br>
+                <input type="radio" name="answer" value="b"data-correct="true">تستخدم لتنفيذ مجموعة من الأوامر بشكل متكرر حتى يتحقق شرط معين<br>
+                <input type="radio" name="answer" value="c">تستخدم لتعريف دوال . <br>
+                <input type="radio" name="answer" value="d">تستخدم لتخزين مجموعة من القيم<br>
+            </div>
+            <div class="navigation-buttons">
+                <button type="button" class="btn" onclick="nextQuestion()">السؤال التالي</button>
+                <button type="button" class="btn" onclick="previousQuestion()">السؤال السابق</button>
+            </div>
+        </div>
+
+        <!-- Add remaining questions here -->
+    </div>
+
+    <div class="container hidden" id="result-page">
+        <div class="header">
+            <h1>النتيجة النهائية</h1>
+            <p id="score">نتيجتك: 0/15</p>
+            <button class="btn" onclick="saveAnswersToGoogleSheet()">حفظ الإجابات</button>
+        </div>
+    </div>
+</body>
+</html>
