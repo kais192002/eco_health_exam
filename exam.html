@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>امتحان مقياس برمجية بايتون</title>
+    <title>first exam in sciences computer</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -178,7 +178,7 @@
             const inputs = document.querySelectorAll('#start-page input');
             for (let input of inputs) {
                 if (!input.value.trim()) {
-                    alert('يرجى ملء جميع الحقول');
+                    alert('Fill in all fields to proceed');
                     return false;
                 }
             }
@@ -195,10 +195,10 @@
         }
 
         function startTimer() {
-            document.getElementById('timer').innerText = `الوقت المتبقي: ${formatTime(totalTime)}`;
+            document.getElementById('timer').innerText = 'Time Left: ${formatTime(totalTime)}`;
             timer = setInterval(() => {
                 totalTime--;
-                document.getElementById('timer').innerText = `الوقت المتبقي: ${formatTime(totalTime)}`;
+                document.getElementById('timer').innerText = `Time Left: ${formatTime(totalTime)}`;
                 if (totalTime <= 0) endExam();
             }, 1000);
         }
@@ -252,7 +252,7 @@
             saveAnswer(); // Save the answer for the last question
             document.getElementById('question-page').classList.add('hidden');
             document.getElementById('result-page').classList.remove('hidden');
-            document.getElementById('score').innerText = `نتيجتك: ${score}/${totalQuestions}`;
+            document.getElementById('score').innerText = `your score: ${score}/${totalQuestions}`;
             saveAnswers();
         }
 
@@ -272,14 +272,14 @@ function saveAnswersToGoogleSheet() {
     .then(response => response.json())
         .then(data => {
             if (data.status === "success") {
-                alert('تم حفظ الإجابات بنجاح');
+                alert('Responses saved successfully');
             } else {
-                alert('حدث خطأ أثناء حفظ الإجابات: ' + data.message);
+                alert('Oops! Something went wrong while saving your answers. Please try again: ' + data.message);
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('تعذر الاتصال بالخادم');
+            alert('Connection to the server failed. Check your internet connection and try again');
         });
 }
     </script>
@@ -287,7 +287,7 @@ function saveAnswersToGoogleSheet() {
 <body>
     <div class="container" id="start-page">
         <div class="header">
-            <h1>امتحان مقياس برمجية بايثون</h1>
+            <h1>first exam in sciences computer</h1>
         </div>
         <div class="form-container">
             <form onsubmit="return validateForm()">
